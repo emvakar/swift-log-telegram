@@ -23,7 +23,11 @@ public class TelegramLogHandler<T>: LogHandler where T: TelegramId {
     var buffer = [Int8](repeating: 0, count: 255)
     var timestamp = time(nil)
     let localTime = localtime(&timestamp)
-    strftime(&buffer, buffer.count, "%Y-%m-%dT%H:%M:%S%z", localTime)
+    var style = "%d.%m.%Y %H:%M:%S %z" // "%Y-%m-%dT%H:%M:%S%z"
+    #if DEBUG
+      style = "%H:%M:%S"
+    #endif
+    strftime(&buffer, buffer.count, style, localTime)
     return buffer.withUnsafeBufferPointer {
       $0.withMemoryRebound(to: CChar.self) {
         String(cString: $0.baseAddress!)
@@ -102,19 +106,18 @@ public class TelegramLogHandler<T>: LogHandler where T: TelegramId {
       mentioned += chatT.mentionedUsers
     }
 
-    let metadata = mergedMetadata(metadata)
-    let logBody = MarkdownLog(
-      timestamp: timestamp,
-      label: label,
-      level: level,
-      message: message,
-      metadata: metadata,
-      file: file,
-      function: function,
-      line: line,
-      mentionedUsers: mentioned)
-
-    send(Message(to: chat, content: "\(logBody)", mute: mute))
+      let metadata = mergedMetadata(metadata)
+      let logBody = MarkdownLog(timestamp: timestamp,
+                                label: label,
+                                level: level,
+                                message: message,
+                                metadata: metadata,
+                                file: file,
+                                function: function,
+                                line: line,
+                                mentionedUsers: mentioned)
+      
+      send(Message(to: chat, content: "\(logBody.description)", mute: mute))
   }
 
   private func mergedMetadata(_ metadata: Logger.Metadata?) -> Logger.Metadata {

@@ -2,6 +2,7 @@ import Foundation
 
 #if canImport(FoundationNetworking)
   import FoundationNetworking
+import Logging
 #endif
 
 extension URLSession {
@@ -18,7 +19,6 @@ extension URLSession {
       error = $2
       semaphore.signal()
     }
-
     dataTask.resume()
 
     _ = semaphore.wait(timeout: .distantFuture)
